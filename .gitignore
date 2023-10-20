@@ -9,6 +9,13 @@ __pycache__/
 
 # Folders
 temp/
+test_data/
+in/
+out/
+
+#submodules
+deface/
+DanceMoves/
 
 # C extensions
 *.so
