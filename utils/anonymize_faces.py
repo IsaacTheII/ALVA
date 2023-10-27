@@ -5,9 +5,23 @@ import subprocess
 
 
 def anon_video(path_to_vid, callback=False):
+
     # start deface on the video
     subprocess.run(["deface", path_to_vid],)
     
+    # optionaly if callback is requested return the new filename
+    if callback:
+        return 0
+
+
+def anon_folder(path_to_folder, callback=False):
+    # start deface on the video
+    subprocess.run(["deface", path_to_vid],)
+    
+    # optionaly if callback is requested return the new filename
+    if callback:
+        return 0
+
 
 def main(args):
     if args:
