@@ -6,12 +6,15 @@ import subprocess
 
 def anon_video(path_to_vid, callback=False):
 
+    filename, _ = os.path.splitext(path_to_vid)
+    filename += "_anonymized.mp4"
+
     # start deface on the video
     subprocess.run(["deface", path_to_vid],)
     
     # optionaly if callback is requested return the new filename
     if callback:
-        return 0
+        return filename
 
 
 def anon_folder(path_to_folder, callback=False):
