@@ -17,7 +17,7 @@ To start the visualisation run the alva_visualisation.py file after all the asse
 """
 
 
-
+import sys
 import os
 import argparse
 import subprocess
@@ -28,6 +28,7 @@ from dotenv import load_dotenv
 from utils import anonymize_faces
 from utils import reduce_fps
 
+from modules import pose_estimation
 
 # set up the environment variables
 load_dotenv()
@@ -41,14 +42,25 @@ def main(args):
         args.video_in = reduce_fps.reduce_fps(args.video_in, args.reduce_fps, callback=True)
     if args.anonymize:
         args.video_in = anonymize_faces.anon_video(args.video_in, callback=True)
+    if args.pose_estimation:
+        pose_estimation.extract_pose(args.video_in)
 
 if __name__ == "__main__":    
-    parser = argparse.ArgumentParser("alva")
+    parser = argparse.ArgumentParser(
+        prog="alva.py",
+        description="This is the main file of the ALVA project. It is used to call the different modules of the project. And to generate the different assets needed for the visualisation.",)
+    
     parser.add_argument("--video_in", type=str, default=env["PATH_TO_DATASET_MANUAL_DATA_IN"], help="path to the video / image ")
     # parser.add_argument("--path_out", type=str, help="path to the video / image ")
     parser.add_argument("--reduce_fps", type=int, help="reduces the fps of the input video")
-    parser.add_argument("--anonymize", help="video will be anonymized")
-    # parser.add_argument("--verbose", help="verbose level of output")
+    parser.add_argument("--anonymize", action="store_true", help="video will be anonymized")
+    parser.add_argument("--pose_estimation", action="store_true", help="extract the pose infromation of people in the video")
+    # parser.add_argument("--verbose", action="store_true", help="verbose")
+
+    # catch no arguments
+    if len(sys.argv)==1:
+        parser.print_help(sys.stderr)
+        sys.exit(1)
     args = parser.parse_args() 
 
     main(args)

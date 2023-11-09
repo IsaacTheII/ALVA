@@ -12,6 +12,7 @@ temp/
 test_data/
 in/
 out/
+runs/
 
 #submodules
 deface/
