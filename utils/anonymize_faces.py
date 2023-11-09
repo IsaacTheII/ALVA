@@ -19,7 +19,7 @@ def anon_video(path_to_vid, callback=False):
 
 def anon_folder(path_to_folder, callback=False):
     # start deface on the video
-    subprocess.run(["deface", path_to_vid],)
+    subprocess.run(["deface", path_to_folder],)
     
     # optionaly if callback is requested return the new filename
     if callback:
