@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import os
 import sys
+import tqdm
 
 usage_hint = """
     Description: Reduces the framerate of a video file using OpenCV and saves the new video with the new fps as 
@@ -36,6 +37,9 @@ def reduce_fps(input_video, new_fps, callback=False):
     # create a linspace of frame posisiton of the source video and sample it at the new framerate then extrapolate the frame indices to be saved.
     frames_to_save = (np.arange(0, cap.get(cv2.CAP_PROP_FRAME_COUNT)/fps, 1 / new_fps ) * fps).astype(int)
 
+    # setup progress bar
+    pbar = tqdm.tqdm(total=len(frames_to_save), desc="Reducing FPS", unit="frames")
+
     count = 0
     new_frames = []
 
@@ -47,6 +51,7 @@ def reduce_fps(input_video, new_fps, callback=False):
             # no further frames to read
             break
         if count in frames_to_save:
+            pbar.update(1)
             # save the frames with the correct indices 
             new_frames.append(frame)
     
