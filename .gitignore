@@ -7,12 +7,31 @@ __pycache__/
 *.env
 *.workspace
 
+# ignore all images and videos
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.mp4
+*.avi
+*.mkv
+*.webm
+*.flv
+*.vob
+*.ogv
+*.ogg
+*.mov
+*.wmv
+
+
 # Folders
 temp/
 test_data/
 in/
 out/
 runs/
+models/
+
 
 #submodules
 deface/

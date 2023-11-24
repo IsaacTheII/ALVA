@@ -1,14 +1,23 @@
 import sys
+import os
 import argparse
 import subprocess
 
 from ultralytics import YOLO
 
+from dotenv import load_dotenv
+
+# set up the environment variables
+load_dotenv()
+env = os.environ
+
 
 def extract_pose(src, show_bool=False, save_bool=True, save_txt_bool=True, save_conf_bool=False):
 
     # configure the model
-    model = YOLO('./models/yolov8n-pose.pt')
+    #model = YOLO('./models/yolov8n-pose.pt')
+    model = YOLO('./models/yolov8x-pose.pt')
+    #model = YOLO('./models/yolov8x-pose-p6.pt')
 
     # run the model on the gpu
     model.to('cuda')
@@ -16,6 +25,26 @@ def extract_pose(src, show_bool=False, save_bool=True, save_txt_bool=True, save_
     # execute the prediciton on the video
     results = model(source=src, show=show_bool, save=save_bool, save_txt=save_txt_bool, save_conf=save_conf_bool)
 
+def extract_pose_openpose(src):
+    try:
+        print(
+            [env["PATH_TO_OPENPOSE"] + "bin\OpenPoseDemo.exe", 
+                        "--video", src, 
+                        "--write_json", "./runs/openpose/", 
+                        "--render_pose", "0",
+                        "--display", "0", ]
+        )
+        # execute the prediciton on the video
+        subprocess.run([env["PATH_TO_OPENPOSE"] + "bin\OpenPoseDemo.exe", 
+                        "--video", src, 
+                        "--write_json", "./runs/openpose/", 
+                        "--render_pose", "0",
+                        "--display", "0", ])
+        #subprocess.run(["./openpose/build/examples/openpose/openpose.bin", "--video", src, "--write_json", "./runs/openpose/", "--display", "0", "--render_pose", "0", "--number_people_max", "1"])
+    except:
+        print("OpenPose is not properly installed or not in the correct directory. Please follow the instructions in the README.md to install OpenPose.")    
+
+    
 
 def main(args):
     # run the pose estimation
@@ -32,7 +61,7 @@ if __name__ == "__main__":
         epilog="For more information visit: https://github.com/ultralytics/ultralytics",)
 
     parser.add_argument("--video_in", type=str, default=0, help="path to the video / image / 0 for webcam stream")
-    parser.add_argument("--show", action="store_true", help="show the output video in a new up window")
+    parser.add_argument("--show", action="store_true", help="show the output video in a new window")
     parser.add_argument("--save", action="store_true", help="save the output video")
     parser.add_argument("--save_text", action="store_true", help="save the output of the pose estimation in a text file")
     parser.add_argument("--save_conf", action="store_true", help="save the confidence of the pose estimation in the results object for further processing")
