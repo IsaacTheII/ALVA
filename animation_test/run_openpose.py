@@ -16,14 +16,13 @@ env = os.environ
 def main(src):
     try:
         # set the output directory
-        output_dir = os.path.join(os.path.dirname(__file__), "assets/openpose_output")
+        output_dir = os.path.join(os.path.dirname(__file__), "openpose")
 
         # execute the prediction on the video
         subprocess.run([env["PATH_TO_OPENPOSE"] + "bin\OpenPoseDemo.exe", 
                         "--video", src, 
                         "--write_json", output_dir, 
-                        "--write_video", os.path.join(os.path.dirname(src), os.path.basename(src), "openpose.avi"),
-                        "--render_pose", "0",
+                        "--write_video", os.path.join(os.path.dirname(src), os.path.basename(src).split('.')[0] + "openpose.avi"),
                         "--display", "0"])
     except Exception as e:
         print(e)
