@@ -182,19 +182,6 @@ def get_keypoints_openpose(directory, total_frames):
             # store the iou values in best_iou
             best_iou[person_index, 0] = iou_person_1
             best_iou[person_index, 1] = iou_person_2
-
-            """ # if the iou with the person_1 is greater than the iou with the person_2, add the keypoints to the person_1
-            if iou_person_1 > iou_person_2:
-                insert_keypoints(person_1["keypoints"], person[0], person[1], frame_index)
-                person_1["bbox"].append(bbox)
-            # if the iou with the person_2 is greater than the iou with the person_1, add the keypoints to the person_2
-            elif iou_person_2 > iou_person_1:
-                insert_keypoints(person_2["keypoints"], person[0], person[1], frame_index)
-                person_2["bbox"].append(bbox)
-            # if the iou with the person_1 and person_2 are equal, add the keypoints to the person_1
-            else:
-                insert_keypoints(person_1["keypoints"], person[0], person[1], frame_index)
-                person_1["bbox"].append(bbox) """
         
         # choose the best iou in the best_iou array and add the keypoints to the person_1 or person_2 then set all values to zero for that row.
         if len(person_in_frame) == 0:
@@ -210,6 +197,9 @@ def get_keypoints_openpose(directory, total_frames):
         else:
             # get the index absolute best iou in best_iou array
             best_iou_index = np.unravel_index(np.argmax(best_iou, axis=None), best_iou.shape)
+            print(frame_index)
+            print("best_iou: ", best_iou)
+            print("best_iou_index: ", best_iou_index)
             if best_iou_index[1] == 0:
                 # add the keypoints to the person_1
                 insert_keypoints(person_1["keypoints"], person_in_frame[best_iou_index[0]][0], person_in_frame[best_iou_index[0]][1], frame_index)
@@ -218,6 +208,10 @@ def get_keypoints_openpose(directory, total_frames):
                 # set the best iou to zero for the column of person_1 and row of person_in_frame
                 best_iou[best_iou_index[0], :] = 0
                 best_iou[:, best_iou_index[1]] = 0
+
+                print("person 1")
+                print("best_iou: ", best_iou)
+                print("best_iou_index: ", best_iou_index)
 
                 # get the best iou index again  and add the keypoints to the person_2
                 best_iou_index = np.unravel_index(np.argmax(best_iou, axis=None), best_iou.shape)
@@ -231,6 +225,10 @@ def get_keypoints_openpose(directory, total_frames):
                 # set the best iou to zero for the column of person_2 and row of person_in_frame
                 best_iou[best_iou_index[0], :] = 0
                 best_iou[:, best_iou_index[1]] = 0
+
+                print("person 2")
+                print("best_iou: ", best_iou)
+                print("best_iou_index: ", best_iou_index)
 
                 # get the best iou index again  and add the keypoints to the person_1
                 best_iou_index = np.unravel_index(np.argmax(best_iou, axis=None), best_iou.shape)
@@ -261,7 +259,7 @@ def animation(p1, p2, total_frames):
 
         return scatter_1 , scatter_2
 
-    anim = FuncAnimation(fig, animate, frames=total_frames, interval=10)
+    anim = FuncAnimation(fig, animate, frames=total_frames, interval=100)
     plt.show()
 
 
@@ -273,8 +271,9 @@ if __name__ == "__main__":
             exit(0)
         # read arguments
         directory = sys.argv[1]
-        total_frames = int(sys.argv[2]) if len(sys.argv) > 2 else 1
-    
+        total_frames = len(os.listdir(directory))
+
+
     except Exception as e:
         print(e)
         print("usage_hint")
