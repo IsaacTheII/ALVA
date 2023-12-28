@@ -15,5 +15,5 @@ app = Dash(
     eager_loading=False,
     serve_locally=True,
     server=True,
-    suppress_callback_exceptions=True
+    suppress_callback_exceptions=True,
     )
