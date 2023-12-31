@@ -25,12 +25,17 @@ __pycache__/
 
 
 # Folders
-temp/
-test_data/
-in/
-out/
-runs/
 models/
+in/
+test_data/
+out/
+temp/
+runs/
+runs_old/
+runs_full_run/
+object_seeking_test/
+object_timeline_test/
+animation_test/
 
 
 #submodules

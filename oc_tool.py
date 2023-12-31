@@ -23,7 +23,7 @@ assets_folders = [f for f in os.listdir("vis_tool/assets")]
 
 timeline = Timeline()
 
-fps = 1
+fps = 25
 
 # load all the keypoints and bounding boxes from all assets
 child = {}
@@ -38,7 +38,7 @@ for folder in assets_folders:
     therapist_tmp[therapist_tmp == 0] = np.nan
     therapist_tmp[:, 1, :] = -therapist_tmp[:, 1, :]
     therapist[folder] = therapist_tmp
-    
+
 
 
 # Create a Dash app layout
@@ -181,14 +181,52 @@ app.layout = html.Div(
                     ),
                     html.Div(style={"width": "25%"},
                              children=[
-                        html.Button("Skeletal Overlay",
-                                    id="skeletal-button"),
-                        html.Button("Isolate Child",
-                                    id="child-button"),
-                        html.Button("Isolate Therapist",
-                                    id="therapist-button"),
-                        html.Button("Track Keypoints",
-                                    id="track-button"),
+                                html.Div(id="control-placeholder", hidden=False, children=[
+                                    html.P("Visualization Controls", style={"text-align": "center"}),
+                                ]),
+                                html.Div(id="Overlay-Controls", hidden=True,
+                                          children=[
+                                              dbc.Card(
+                                                    [
+                                                        dbc.CardBody(
+                                                            [
+                                                                html.Div("Overlay Controls", style={"text-align": "center"}),
+                                                                dcc.Slider(0, 1, 0.5, value=0.5, id="overlay-slider"),
+                                                            ],
+                                                            style={"width": "100%", "padding": "8px"},
+                                                        ),
+                                                    ],
+                                                    className="mb-3",
+                                                    style={"width": "100%",
+                                                             "padding": "0px", "margin": "0px",
+                                                             "align-items": "center"},
+                                                ),
+                                          ]
+                                          ),
+                                html.Div(id="Isolate-Controls", hidden=True,
+                                          children=[
+                                              html.Button("Skeletal Overlay",
+                                                          id="skeletal-button"),
+                                              html.Button("Isolate Child",
+                                                          id="child-button"),
+                                              html.Button("Isolate Therapist",
+                                                          id="therapist-button"),
+                                              html.Button("Track Keypoints",
+                                                          id="track-button"),
+                                          ]
+                                          ),
+                                html.Div(id="Track-Controls", hidden=True,
+                                            children=[
+                                                html.Button("Skeletal Overlay",
+                                                            id="skeletal-button"),
+                                                html.Button("Isolate Child",
+                                                            id="child-button"),
+                                                html.Button("Isolate Therapist",
+                                                            id="therapist-button"),
+                                                html.Button("Track Keypoints",
+                                                            id="track-button"),
+                                            ]
+                                            ),
                     ]
                     )
                 ],
@@ -212,6 +250,10 @@ app.layout = html.Div(
     Output("vis-view-isolated-child", "hidden"),
     Output("vis-view-isolated-therapist", "hidden"),
     Output("vis-view-track", "hidden"),
+    Output("control-placeholder", "hidden"),
+    Output("Overlay-Controls", "hidden"),
+    Output("Isolate-Controls", "hidden"),
+    Output("Track-Controls", "hidden"),
     Input("skeletal-overlay-button", "n_clicks"),
     Input("isolated-child-button", "n_clicks"),
     Input("isolated-therapist-button", "n_clicks"),
@@ -221,15 +263,15 @@ def update_vis_view(_so, _ic, _it, _tk):
     ctx = callback_context
     button_id = ctx.triggered[0]["prop_id"].split(".")[0]
     if button_id == "skeletal-overlay-button":
-        return True, False, True, True, True
+        return True, False, True, True, True, True, False, True, True
     elif button_id == "isolated-child-button":
-        return True, True, False, True, True
+        return True, True, False, True, True, True, True, False, True
     elif button_id == "isolated-therapist-button":
-        return True, True, True, False, True
+        return True, True, True, False, True, True, True, False, True
     elif button_id == "track-keypoints-button":
-        return True, True, True, True, False
+        return True, True, True, True, False, True, True, True, False
     else:
-        return False, True, True, True, True
+        return False, True, True, True, True, False, True, True, True
     
 
 
