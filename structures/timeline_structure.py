@@ -1,7 +1,8 @@
 import os
-import datetime as dt
 import pandas as pd
 import numpy as np
+import time
+import cv2
 
 
 class Timeline:
@@ -12,15 +13,15 @@ class Timeline:
 
     def __init__(self, video_name=None, duration=None, frame_width=None, frame_height=None, frame_rate=None, total_frames=None, date_recorded=None, author=None, date_coding=None):
         # general information
-        self.Video_Name = video_name
-        self.Duration = duration
-        self.Frame_Width = frame_width
-        self.Frame_Height = frame_height
-        self.Frame_Rate = frame_rate
-        self.Total_Frames = total_frames
-        self.Date_Recorded = date_recorded
-        self.Author = author
-        self.Date_Coding = date_coding
+        self.Video_Name = str(video_name)
+        self.Duration = str(duration)
+        self.Frame_Width = str(frame_width)
+        self.Frame_Height = str(frame_height)
+        self.Frame_Rate = str(frame_rate)
+        self.Total_Frames = str(total_frames)
+        self.Date_Recorded = str(date_recorded)
+        self.Author = str(author)
+        self.Date_Coding = str(date_coding)
 
         # dataframes for the different tables
         self.Objects = pd.DataFrame(columns=[
@@ -49,7 +50,7 @@ class Timeline:
         This function is used to add an object to the objects table.
         """
         self.Objects = pd.concat([self.Objects, 
-                                  pd.DataFrame([[start_time, end_time, object_name]], columns=self.Objects.columns)], 
+                                  pd.DataFrame([[str(start_time), str(end_time), str(object_name)]], columns=self.Objects.columns)], 
                                   ignore_index=True)
         return
 
@@ -58,7 +59,7 @@ class Timeline:
         This function is used to add an object interaction to the object interaction table.
         """
         self.Object_Interactions = pd.concat([self.Object_Interactions, 
-                                              pd.DataFrame([[event_time, event_description]], columns=self.Object_Interactions.columns)],
+                                              pd.DataFrame([[str(event_time), str(event_description)]], columns=self.Object_Interactions.columns)],
                                               ignore_index=True)
         return
 
@@ -67,7 +68,7 @@ class Timeline:
         This function is used to add an abcs coding to the abcs coding table.
         """
         self.ABCS_Coding = pd.concat([self.ABCS_Coding, 
-                                      pd.DataFrame([[start_time, end_time, abcs_variable, abcs_comment]], columns=self.ABCS_Coding.columns)],
+                                      pd.DataFrame([[str(start_time), str(end_time), str(abcs_variable), str(abcs_comment)]], columns=self.ABCS_Coding.columns)],
                                       ignore_index=True)
         return
 
@@ -106,63 +107,63 @@ class Timeline:
 
     # setters and getters for general information
     def set_video_name(self, video_name):
-        self.Video_Name = video_name
+        self.Video_Name = str(video_name)
         return
 
     def get_video_name(self):
         return self.Video_Name
 
     def set_duration(self, duration):
-        self.Duration = duration
+        self.Duration = str(duration)
         return
 
     def get_duration(self):
         return self.Duration
 
     def set_frame_width(self, frame_width):
-        self.Frame_Width = frame_width
+        self.Frame_Width = str(frame_width)
         return
 
     def get_frame_width(self):
         return self.Frame_Width
 
     def set_frame_height(self, frame_height):
-        self.Frame_Height = frame_height
+        self.Frame_Height = str(frame_height)
         return
 
     def get_frame_height(self):
         return self.Frame_Height
 
     def set_frame_rate(self, frame_rate):
-        self.Frame_Rate = frame_rate
+        self.Frame_Rate = str(frame_rate)
         return
 
     def get_frame_rate(self):
         return self.Frame_Rate
     
     def set_total_frames(self, total_frames):
-        self.Total_Frames = total_frames
+        self.Total_Frames = str(total_frames)
         return
     
     def get_total_frames(self):
         return self.Total_Frames
 
     def set_date_recorded(self, date_recorded):
-        self.Date_Recorded = date_recorded
+        self.Date_Recorded = str(date_recorded)
         return
 
     def get_date_recorded(self):
         return self.Date_Recorded
 
     def set_author(self, author):
-        self.Author = author
+        self.Author = str(author)
         return
 
     def get_author(self):
         return self.Author
 
     def set_date_coding(self, date_coding):
-        self.Date_Coding = date_coding
+        self.Date_Coding = str(date_coding)
         return
 
     def get_date_coding(self):
@@ -305,5 +306,26 @@ class Timeline:
                 file.write(row["Start_Time"] + "\t" * 2 + row["End_Time"] + "\t" * 2 + row["ABCS_Variable"] + "\t" * 5 + row["ABCS_Comment"] + "\n")
             file.write(table_sep + "\n\n\n")
 
-        
+        return
+    
 
+
+def auto_init_(video_path):
+    """
+    This function is used to auto init the timeline structure from a video file.
+    """
+    # init timeline
+    cap = cv2.VideoCapture(video_path)
+
+    timeline = Timeline(
+        video_name = os.path.basename(video_path).split(".")[0],
+        duration=cap.get(cv2.CAP_PROP_FRAME_COUNT) / cap.get(cv2.CAP_PROP_FPS),
+        frame_width=cap.get(cv2.CAP_PROP_FRAME_WIDTH),
+        frame_height=cap.get(cv2.CAP_PROP_FRAME_HEIGHT),
+        frame_rate=cap.get(cv2.CAP_PROP_FPS),
+        total_frames=cap.get(cv2.CAP_PROP_FRAME_COUNT),
+        date_recorded=time.strftime("%Y-%m-%d", time.strptime(time.ctime(os.path.getctime(video_path)))),
+        author=None,
+        date_coding=time.strftime("%Y-%m-%d", time.strptime(time.ctime(os.path.getctime(video_path)))),
+    )
+    return timeline

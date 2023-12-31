@@ -18,4 +18,5 @@ def load_numpy_keypoints_bbox(path, name):
     bbox = np.load(os.path.join(path, name + "_bbox.npy"))
 
     return keypoints, bbox
+
     

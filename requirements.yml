@@ -1,0 +1,13 @@
+name: ALVA
+channels:
+  - defaults
+dependencies:
+  - python=3.10
+  - numpy
+  - python-dotenv
+  - ultralytics
+  - pytorch
+  - torchvision
+  - pytorch-cuda=12.1
+  - torchaudio
+prefix: C:\Users\IsaacTheII\anaconda3\envs\ALVA
