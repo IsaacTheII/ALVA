@@ -8,6 +8,7 @@ from matplotlib.animation import FuncAnimation
 
 
 
+
 def calculate_iou(bbox1, bbox2):
     # get the coordinates of the bounding boxes
     x_min_1, y_min_1, x_max_1, y_max_1 = bbox1
@@ -207,6 +208,8 @@ if __name__ == "__main__":
         print("usage_hint")
         exit(1)
     
-    child, therapist, _, _ = get_keypoints_openpose(directory)
+    child, therapist, child_bbox, therapist_bbox = get_keypoints_openpose(directory)
 
     animation(child, therapist)
+
+    
