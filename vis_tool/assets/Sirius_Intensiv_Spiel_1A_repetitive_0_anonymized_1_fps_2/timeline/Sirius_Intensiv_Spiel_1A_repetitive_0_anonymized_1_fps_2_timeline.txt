@@ -3,11 +3,11 @@ General Information
 =========================================================================
 Name				Value
 -------------------------------------------------------------------------
-Video_Name			Sirius_Intensiv_Spiel_1A_repetitive_0_anonymized_original
+Video_Name			Sirius_Intensiv_Spiel_1A_repetitive_0_anonymized_2_original
 Duration			543.88
 Frame_Width			720.0
 Frame_Height		576.0
-Frame_Rate			25.0
+Frame_Rate			1.0
 Total_Frames		13597.0
 Date_Recorded		2023-12-29
 Author				max mustermann
