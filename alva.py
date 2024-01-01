@@ -164,7 +164,7 @@ def main(args):
     if not os.path.exists(os.path.join(path_to_assets, "timeline")):
         os.mkdir(os.path.join(path_to_assets, "timeline"))
     # save the timeline to the timeline folder
-    timeline_file_name = os.path.join(path_to_assets, "timeline", os.path.split(path_to_assets)[1] + ".txt")
+    timeline_file_name = os.path.join(path_to_assets, "timeline", os.path.split(path_to_assets)[1] + "_timeline.txt")
     timeline.export_to_file(timeline_file_name)
 
 

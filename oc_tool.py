@@ -476,8 +476,7 @@ def update_vis_view_isolated(current_time, val_list, value_folder):
 def update_timeline(current_time, value_folder):
     if current_time is None or value_folder is None:
         return no_update
-    return no_update
-    # return render_timeline(objects[value_folder], interactions[value_folder], abcs[value_folder], dur_sec[value_folder], fps[value_folder], int(current_time * fps[value_folder]))
+    return render_timeline(objects[value_folder], interactions[value_folder], abcs[value_folder], dur_sec[value_folder], fps[value_folder], int(current_time * fps[value_folder]))
 
 
 @app.callback(
@@ -558,3 +557,4 @@ def update_seek_bar(value, duration, current_time):
 
 if __name__ == "__main__":
     app.run_server(debug=True, port=1729)
+
