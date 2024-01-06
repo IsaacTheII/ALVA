@@ -1,7 +1,8 @@
 import plotly.graph_objs as go
 import time
 import numpy as numpy
-
+import pandas as pd
+from vis_tool.config.settings import abcs_code_colors as abcs_color_codes
 
 
 
@@ -46,25 +47,38 @@ def render_timeline(object, interactions, abcs, duration, fps, frame_num):
         fig.add_shape(type="line", x0=0, y0=i, x1=total_frames,
                       y1=i, line=dict(color="grey", width=1, dash="dot"))
 
-    # draw current time
-    fig.add_shape(type="line", x0=frame_num, y0=0, x1=frame_num,
-                  y1=NUM_TRACKS+1, line=dict(color="red", width=2))
-
     # draw objects
     for index, row in object.iterrows():
+        if row["End_Time"] < frame_num - DURATION_IN_SECONDS * fps * .5 or row["Start_Time"] > frame_num + DURATION_IN_SECONDS * fps * .5:
+            continue
         y_off = (index) % (NUM_TRACKS - 2)
         fig.add_shape(type="rect", x0=row["Start_Time"], y0=NUM_TRACKS - y_off - 1, x1=row["End_Time"], y1=NUM_TRACKS - y_off,
-                      line=dict(color="blue", width=2), fillcolor="blue", opacity=0.5,)
+                      fillcolor="cornflowerblue")
         fig.add_annotation(x=row["Start_Time"], xanchor="left", y=NUM_TRACKS - y_off - 0.5,
                            text=row["Object_Name"], showarrow=False, font=dict(size=15))
         
     # draw interactions
     for index, row in interactions.iterrows():
+        if row["Event_Time"] < frame_num - DURATION_IN_SECONDS * fps * .5 or row["Event_Time"] > frame_num + DURATION_IN_SECONDS * fps * .5:
+            continue
         fig.add_shape(type="rect", x0=row["Event_Time"], y0=1, x1=row["Event_Time"] + 0.5 * fps, y1=2,
-                      line=dict(color="red", width=2), fillcolor="red", opacity=0.5,)
-        fig.add_annotation(x=row["Event_Time"], xanchor="left", y=1.9 - index % 4*0.25,
+                      fillcolor="plum", line_color="plum")
+        fig.add_annotation(x=row["Event_Time"], xanchor="left", y=2 - index % 4*0.251,
                            text=row["Event_Description"], showarrow=False, font=dict(size=10))
+        
+    # draw abcs
+    for index, row in abcs.iterrows():
+        if row["End_Time"] < frame_num - DURATION_IN_SECONDS * fps * .5 or row["Start_Time"] > frame_num + DURATION_IN_SECONDS * fps * .5:
+            continue
+        fig.add_shape(type="rect", x0=row["Start_Time"], y0=0, x1=row["End_Time"], y1=1,
+                      line=dict(color="green", width=2), fillcolor=abcs_color_codes[row["ABCS_Variable"]], opacity=0.5,)
+        fig.add_annotation(x=row["Start_Time"], xanchor="left", y=0.5,
+                           text=row["ABCS_Variable"], showarrow=False, font=dict(size=15))
 
+    # draw current time
+    fig.add_shape(type="line", x0=frame_num, y0=0, x1=frame_num,
+                  y1=NUM_TRACKS+1, line=dict(color="red", width=2))
+    
     return fig
 """ 
     # draw objects 
@@ -119,4 +133,14 @@ def render_timeline(object, interactions, abcs, duration, fps, frame_num):
             fig.add_annotation(x=row["Start_Time"] + i * x_off, xanchor="left", y=y_pos + 0.5 - y_off,
                            text=row["Object_Name"], showarrow=False, font=dict(size=10))
     """
+
+def update_abcs_coding(abcs, frame_num, code):
+    for index, row in abcs.iterrows():
+        if row["End_Time"] >= frame_num:
+            return abcs
+    if abcs.empty:
+        abcs.loc[len(abcs)] = [0, frame_num, code, ""]
+    else:
+        abcs.loc[len(abcs)] = [abcs.iloc[-1]["End_Time"] + 1, frame_num, code, ""]
+    return abcs
 

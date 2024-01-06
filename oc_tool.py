@@ -12,17 +12,17 @@ from vis_tool.vis_app import app
 from vis_tool.components.video_player import video_player
 from vis_tool.components.juxtaposition_components import render_keypoints
 from vis_tool.components.explicit_representation_components import render_tracked_keypoints
-from vis_tool.components.timeline_components import render_timeline
+from vis_tool.components.timeline_components import render_timeline, update_abcs_coding
 from structures.timeline_structure import Timeline
 from structures.keypoints_structure import load_numpy_keypoints_bbox
 
+from vis_tool.config.settings import VIS_TOOL_ASSETS_PATH, SCREEN_HEIGHT, abcs_code_colors
+
 # Get the list of video files in the assets directory
 
-VIS_TOOL_PATH = os.path.dirname(os.path.abspath(__file__))
 
-print(VIS_TOOL_PATH)
 
-assets_folders = [f for f in os.listdir("vis_tool/assets")]
+assets_folders = [f for f in os.listdir(VIS_TOOL_ASSETS_PATH)]
 
 
 # load all dataframes and video info from all timelines in all assets
@@ -99,8 +99,6 @@ fps[None] = fps[assets_folders[0]]
 # VC: Video Controls
 # Timeline: Timeline of the video
 # Vis_C: Visualization Controls
-
-SCREEN_HEIGHT = 1080    # ajust big or small depending of the avalable vertical screen space
 
 
 app.layout = html.Div(
@@ -271,22 +269,27 @@ app.layout = html.Div(
                                                  children=[
                                                      html.Div([
                                                          html.Button(
-                                                             "Expression of Wishes", id="ew-button", style={"border-radius": "30px", "font-size": "25px", "padding": "5px"}),
+                                                             "Expression of Wishes", id="ew-button", 
+                                                             style={"border-radius": "30px", "font-size": "25px", "padding": "5px", "background": abcs_code_colors["EW"]}),
                                                          html.Button(
-                                                             "Unscorable", id="un-button", style={"border-radius": "30px", "font-size": "25px", "padding": "5px", "padding-left": "20px", "padding-right": "20px"}),
+                                                             "Unscorable", id="un-button", 
+                                                             style={"border-radius": "30px", "font-size": "25px", "padding": "5px 20px 5px 20px", "background": abcs_code_colors["UN"]}),
                                                      ], style={"display": "flex", "flex-direction": "column", "justify-content": "center", "align-items": "flex-end"}),
                                                      html.Button(
-                                                         "Other", id="ot-button", style={"border-radius": "30px", "font-size": "25px", "padding": "5px", "padding-top": "30px", "padding-bottom": "30px"}),
+                                                         "Other", id="ot-button", 
+                                                         style={"border-radius": "30px", "font-size": "25px", "padding": "30px 5px 30px 5px", "background": abcs_code_colors["OT"]}),
                                                      html.Div([
                                                          html.Button(
-                                                             "Repetitive Behaviour", id="rb-button", style={"border-radius": "30px", "font-size": "25px", "padding": "5px"}),
+                                                             "Repetitive Behaviour", id="rb-button", 
+                                                             style={"border-radius": "30px", "font-size": "25px", "padding": "5px", "background": abcs_code_colors["RB"]}),
                                                          html.Button(
-                                                             "Functional Play", id="fp-button", style={"border-radius": "30px", "font-size": "25px", "padding": "5px"})
+                                                             "Functional Play", id="fp-button", 
+                                                             style={"border-radius": "30px", "font-size": "25px", "padding": "5px", "background": abcs_code_colors["FP"]}),
                                                      ], style={"display": "flex", "flex-direction": "column", "justify-content": "center", "align-items": "flex-start"}),
                                                  ],
-                                              style={"text-align": "center", "display": "flex", "flex-direction": "row", "justify-content": "center", "align-items": "center"}),
+                                              style={"text-align": "center", "display": "flex", "flex-direction": "row", "justify-content": "center", "align-items": "center", "padding-top": "-5px"}),
                                  ],
-                                     style={"margin": "8px", "padding": "5px"},
+                                     style={"margin": "8px","margin-top": "-5px", "padding": "5px"},
                                  ),
                     ],
                     ),
@@ -325,7 +328,7 @@ app.layout = html.Div(
                                                       value=[],
                                                       inline=True,
                                                       style={"width": "100%", "display": "flex", "flex-direction": "row",
-                                                             "justify-content": "space-evenly", "align-items": "center"},
+                                                             "justify-content": "space-evenly", "align-items": "center", "padding-bottom": "20px"},
                                                   ),
                                               ]
                                               ),
@@ -348,7 +351,7 @@ app.layout = html.Div(
                                                       value=[],
                                                       inline=True,
                                                       style={"width": "100%", "display": "flex", "flex-direction": "row",
-                                                             "justify-content": "space-evenly", "align-items": "center"},
+                                                             "justify-content": "space-evenly", "align-items": "center", "padding-bottom": "20px"},
                                                   ),
                                               ],
                                               style={"width": "100%", "display": "flex", "flex-direction": "column",
@@ -356,7 +359,7 @@ app.layout = html.Div(
                                               ),
                                  ],
                                      style={"width": "100%", "display": "flex",
-                                            "flex-direction": "column"}
+                                            "flex-direction": "column", "margin": "8px", "padding": "5px"},
                                  ),
                     ]
                     )
@@ -435,10 +438,9 @@ def update_video(value):
     State("video-dropdown", "value"),
 )
 def update_vis_view_isolated(current_time, val_list, value_folder):
-    highlight_dict = {"RH": "right hand" in val_list, "LH": "left hand" in val_list,
-                      "RF": "right foot" in val_list, "LF": "left foot" in val_list}
     current_time = 0 if current_time is None else current_time
-    return render_keypoints(child[value_folder], highlight_dict, int(current_time * fps[value_folder]) - 1, int(SCREEN_HEIGHT/2))
+    return render_keypoints(child[value_folder], "right hand" in val_list, "left hand" in val_list, "right foot" in val_list, "left foot" in val_list,
+                            int(current_time * fps[value_folder]) - 1, int(SCREEN_HEIGHT/2))
 
 
 @app.callback(
@@ -448,10 +450,9 @@ def update_vis_view_isolated(current_time, val_list, value_folder):
     State("video-dropdown", "value"),
 )
 def update_vis_view_isolated(current_time, val_list, value_folder):
-    highlight_dict = {"RH": "right hand" in val_list, "LH": "left hand" in val_list,
-                      "RF": "right foot" in val_list, "LF": "left foot" in val_list}
     current_time = 0 if current_time is None else current_time
-    return render_keypoints(therapist[value_folder], highlight_dict, int(current_time * fps[value_folder]) - 1, int(SCREEN_HEIGHT/2))
+    return render_keypoints(therapist[value_folder], "right hand" in val_list, "left hand" in val_list, "right foot" in val_list, "left foot" in val_list,
+                            int(current_time * fps[value_folder]) - 1, int(SCREEN_HEIGHT/2))
 
 
 @app.callback(
@@ -555,6 +556,41 @@ def update_seek_bar(value, duration, current_time):
         return no_update, no_update, duration, marks, current_time if current_time is not None else 0
 
 
+@app.callback(
+    Output("ot-button", "n_clicks"),
+    Input("ew-button", "n_clicks"),
+    Input("un-button", "n_clicks"),
+    Input("ot-button", "n_clicks"),
+    Input("rb-button", "n_clicks"),
+    Input("fp-button", "n_clicks"),
+    State("player_original", "currentTime"),
+    State("video-dropdown", "value"),
+)
+def update_coding(ew, un, ot, rb, fp, current_time, value_folder):
+    if current_time is None or value_folder is None:
+        return no_update
+    ctx = callback_context
+    button_id = ctx.triggered[0]["prop_id"].split(".")[0]
+    if button_id == "ew-button":
+        update_abcs_coding(abcs[value_folder], int(current_time * fps[value_folder]) - 1, "EW")
+        return no_update
+    elif button_id == "un-button":
+        update_abcs_coding(abcs[value_folder], int(current_time * fps[value_folder]) - 1, "UN")
+        return no_update
+    elif button_id == "ot-button":
+        abcs[value_folder] = update_abcs_coding(abcs[value_folder], int(current_time * fps[value_folder]) - 1, "OT")
+        return no_update
+    elif button_id == "rb-button":
+        update_abcs_coding(abcs[value_folder], int(current_time * fps[value_folder]) - 1, "RB")
+        return no_update
+    elif button_id == "fp-button":
+        update_abcs_coding(abcs[value_folder], int(current_time * fps[value_folder]) - 1, "FP")
+        return no_update
+    else:
+        return no_update
+
+
 if __name__ == "__main__":
     app.run_server(debug=True, port=1729)
+    #app.run_server(debug=True, port=8050)
 

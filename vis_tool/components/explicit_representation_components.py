@@ -1,5 +1,6 @@
 import plotly.graph_objs as go
 import numpy as numpy
+from vis_tool.config.settings import hf_color
 
 
 
@@ -30,39 +31,39 @@ def render_tracked_keypoints(keypoints, dict_track, duration, frame_num, scr_hei
         for frame in range(frame_num - duration if frame_num - duration >= 0 else 0, frame_num + 1):
             traces_x.append(keypoints[4, 0, frame])
             traces_y.append(keypoints[4, 1, frame])
-        fig.add_trace(go.Scatter(x=traces_x, y=traces_y, mode='lines', marker=dict(color='yellow', opacity=0.5), line=dict(width=3)))
+        fig.add_trace(go.Scatter(x=traces_x, y=traces_y, mode='lines', marker=dict(color=hf_color['RH'], opacity=0.5), line=dict(width=3)))
         fig.add_trace(go.Scatter(x=[keypoints[4, 0, frame_num]], 
                                  y=[keypoints[4, 1, frame_num]],
-                                 mode='markers', marker=dict(size=15, color='yellow'), marker_line_width=2))
+                                 mode='markers', marker=dict(size=15, color=hf_color['RH']), marker_line_width=2))
     if dict_track['LH']:
         traces_x = []
         traces_y = []
         for frame in range(frame_num - duration if frame_num - duration >= 0 else 0, frame_num + 1):
             traces_x.append(keypoints[7, 0, frame])
             traces_y.append(keypoints[7, 1, frame])
-        fig.add_trace(go.Scatter(x=traces_x, y=traces_y, mode='lines', marker=dict(color='limegreen', opacity=0.5), line=dict(width=3)))
+        fig.add_trace(go.Scatter(x=traces_x, y=traces_y, mode='lines', marker=dict(color=hf_color['LH'], opacity=0.5), line=dict(width=3)))
         fig.add_trace(go.Scatter(x=[keypoints[7, 0, frame_num]], 
                                  y=[keypoints[7, 1, frame_num]],
-                                 mode='markers', marker=dict(size=15, color='limegreen'), marker_line_width=2))
+                                 mode='markers', marker=dict(size=15, color=hf_color['LH']), marker_line_width=2))
     if dict_track['RF']:
         traces_x = []
         traces_y = []
         for frame in range(frame_num - duration if frame_num - duration >= 0 else 0, frame_num + 1):
             traces_x.append(keypoints[11, 0, frame])
             traces_y.append(keypoints[11, 1, frame])
-        fig.add_trace(go.Scatter(x=traces_x, y=traces_y, mode='lines', marker=dict(color='deepskyblue', opacity=0.5), line=dict(width=3)))
+        fig.add_trace(go.Scatter(x=traces_x, y=traces_y, mode='lines', marker=dict(color=hf_color['RF'], opacity=0.5), line=dict(width=3)))
         fig.add_trace(go.Scatter(x=[keypoints[11, 0, frame_num]], 
                                  y=[keypoints[11, 1, frame_num]],
-                                 mode='markers', marker=dict(size=15, color='deepskyblue'), marker_line_width=2))
+                                 mode='markers', marker=dict(size=15, color=hf_color['RF']), marker_line_width=2))
     if dict_track['LF']:
         traces_x = []
         traces_y = []
         for frame in range(frame_num - duration if frame_num - duration >= 0 else 0, frame_num + 1):
             traces_x.append(keypoints[14, 0, frame])
             traces_y.append(keypoints[14, 1, frame])
-        fig.add_trace(go.Scatter(x=traces_x, y=traces_y, mode='lines', marker=dict(color='blue', opacity=0.5), line=dict(width=3)))
+        fig.add_trace(go.Scatter(x=traces_x, y=traces_y, mode='lines', marker=dict(color=hf_color['LF'], opacity=0.5), line=dict(width=3)))
         fig.add_trace(go.Scatter(x=[keypoints[14, 0, frame_num]], 
                                  y=[keypoints[14, 1, frame_num]],
-                                 mode='markers', marker=dict(size=15, color='blue'), marker_line_width=2))
+                                 mode='markers', marker=dict(size=15, color=hf_color['LF']), marker_line_width=2))
    
     return fig

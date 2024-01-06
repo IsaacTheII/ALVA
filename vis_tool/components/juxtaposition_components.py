@@ -1,8 +1,9 @@
 import plotly.graph_objs as go
 import numpy as numpy
+from vis_tool.config.settings import hf_color
 
 
-def render_keypoints(keypoints, highlight_dict, frame_num, scr_height=600):
+def render_keypoints(keypoints, RH, LH, RF, LF, frame_num, scr_height=600):
     fig = go.Figure()
 
     fig.update_layout(margin=dict(l=0, r=0, b=0, t=0), showlegend=False,
@@ -25,21 +26,21 @@ def render_keypoints(keypoints, highlight_dict, frame_num, scr_height=600):
                              y=keypoints[:, 1, frame_num],
                              mode='markers',))
     
-    if highlight_dict['RH']:
+    if RH:
         fig.add_trace(go.Scatter(x=[keypoints[4, 0, frame_num]], 
                                  y=[keypoints[4, 1, frame_num]],
-                                 mode='markers', marker=dict(size=15, color='yellow'), marker_line_width=2))
-    if highlight_dict['LH']:
+                                 mode='markers', marker=dict(size=15, color=hf_color['RH']), marker_line_width=2))
+    if LH:
         fig.add_trace(go.Scatter(x=[keypoints[7, 0, frame_num]], 
                                  y=[keypoints[7, 1, frame_num]],
-                                 mode='markers', marker=dict(size=15, color='limegreen'), marker_line_width=2))
-    if highlight_dict['RF']:
+                                 mode='markers', marker=dict(size=15, color=hf_color['LH']), marker_line_width=2))
+    if RF:
         fig.add_trace(go.Scatter(x=[keypoints[11, 0, frame_num]], 
                                  y=[keypoints[11, 1, frame_num]],
-                                 mode='markers', marker=dict(size=15, color='deepskyblue'), marker_line_width=2))
-    if highlight_dict['LF']:
+                                 mode='markers', marker=dict(size=15, color=hf_color['RF']), marker_line_width=2))
+    if LF:
         fig.add_trace(go.Scatter(x=[keypoints[14, 0, frame_num]], 
                                  y=[keypoints[14, 1, frame_num]],
-                                 mode='markers', marker=dict(size=15, color='blue'), marker_line_width=2))
+                                 mode='markers', marker=dict(size=15, color=hf_color['LF']), marker_line_width=2))
     
     return fig
