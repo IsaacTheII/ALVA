@@ -35,9 +35,7 @@ runs/
 backups/
 runs_old/
 runs_full_run/
-object_seeking_test/
-object_timeline_test/
-animation_test/
+
 
 
 #submodules
