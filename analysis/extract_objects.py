@@ -16,7 +16,7 @@ objects_dict = dict(model.names)
 objects_dict = {str(key): value for key, value in objects_dict.items()}
 
 # key are objects of interest and values are common mismatches ##TODO: add further objects of interest
-objects_of_interest = {"cup": [], "bowl": ["toilet", "sink"], "teddy bear": []}
+objects_of_interest = {"cup": ["glass", "wine glass"], "bottle":[], "bowl": ["toilet", "sink"], "teddy bear": []}
 
 
 

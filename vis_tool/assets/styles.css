@@ -1,0 +1,15 @@
+input[type="checkbox"] {
+    transform: scale(1.5);
+    translate: (0, 0);
+}
+
+#timeline-graph:after {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    height: 100%;
+    background: #f00;
+    content: "";
+    width: 1px;
+    display: block;
+}

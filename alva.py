@@ -49,18 +49,38 @@ env = os.environ
 
 
 def main(args):
+    # SETUP THE TIMELINE STRUCTURE
+    timeline = timeline_structure.auto_init_(args.video_in)
+
+    # RUN PREPROCESSING MODULES
+    if args.reduce_fps:
+        # update the frame rate of the timeline
+        timeline.set_frame_rate(args.reduce_fps)
+        args.video_in = reduce_fps.reduce_fps(
+            args.video_in, args.reduce_fps, callback=True)
+    if args.anonymize:
+        args.video_in = anonymize_faces.anon_video(
+            args.video_in, callback=True)
+    
+    #update the filename of the video_in in the timeline
+    timeline.set_video_name(os.path.basename(args.video_in).split(".")[0])
+
+
+
     # SET UP FOLDERS AND PATHS FOR THE PROJECT
     # split the basename and discard the file extension
     video_name = os.path.splitext(os.path.basename(args.video_in))[0]
+
     # set up temp folder
     if not os.path.exists("temp"):
         os.mkdir("temp")
     path_to_assets = "temp"
+
     # destination folder for the assets for the visualisation tool
-    path_to_vis_tool_assets = os.path.join("vis_tool", "assets")
+    path_to_vis_tool_assets = os.path.join("vis_tool", "assets", "video_assets")
 
     # create output directory with the same name as the basename of video_in in ./temp/ folder and copy the video_in to the output directory
-    # check if the namespace is open in the ./vis_tool/assets folder
+    # check if the namespace is open in the ./vis_tool/assets/video_assets folder
     if not os.path.exists(os.path.join(path_to_vis_tool_assets, video_name)):
         # create the directory where all the assets will be stored
         os.mkdir(os.path.join(path_to_assets, video_name))
@@ -83,17 +103,13 @@ def main(args):
                      new_video_name + os.path.splitext(args.video_in)[1]))
         args.video_in = os.path.join(
             path_to_assets, new_video_name + os.path.splitext(args.video_in)[1])
+    
+    # update the path to the video_in in the timeline
+    timeline.set_video_name(os.path.basename(args.video_in).split(".")[0])
 
-    # SETUP THE TIMELINE STRUCTURE
-    timeline = timeline_structure.auto_init_(args.video_in)
+    
 
     # RUN THE DIFFERENT PROCESSING MODULES
-    """ if args.reduce_fps:
-        args.video_in = reduce_fps.reduce_fps(
-            args.video_in, args.reduce_fps, callback=True)
-    if args.anonymize:
-        args.video_in = anonymize_faces.anon_video(
-            args.video_in, callback=True) """
     if args.pose_estimation:
         pose_estimation.extract_pose_openpose(args.video_in)
     if args.object_detection:
@@ -168,7 +184,7 @@ def main(args):
     timeline.export_to_file(timeline_file_name)
 
 
-    # copy the generated assets to the vis_tool/assets folder and then clean up everythin in runs and temp folder
+    # copy the generated assets to the vis_tool/assets/video_assets folder and then clean up everythin in runs and temp folder
     shutil.move(os.path.join(path_to_assets), path_to_vis_tool_assets)
     shutil.rmtree("runs")
     os.mkdir("runs")
@@ -184,8 +200,8 @@ if __name__ == "__main__":
     parser.add_argument("--video-in", type=str,
                         default=env["PATH_TO_DATASET_MANUAL_DATA_IN"], help="path to the video / image ")
     # parser.add_argument("--path_out", type=str, help="path to the video / image ")    # will automatically be saved in the assets folder of the oc_tool
-    # parser.add_argument("--reduce-fps", type=int, help="reduces the fps of the input video")  # this step should be done before loading the video into data-in
-    # parser.add_argument("--anonymize", action="store_true", help="video will be anonymized")  # this step should be done before loading the video into data-in
+    parser.add_argument("--reduce-fps", type=int, help="reduces the fps of the input video")  # this step should be done before loading the video into data-in
+    parser.add_argument("--anonymize", action="store_true", help="video will be anonymized")  # this step should be done before loading the video into data-in
     parser.add_argument("--pose-estimation", action="store_true",
                         help="extract the pose infromation of people in the video")
     parser.add_argument("--object-detection", action="store_true",

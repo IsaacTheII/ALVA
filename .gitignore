@@ -22,6 +22,7 @@ __pycache__/
 *.ogg
 *.mov
 *.wmv
+*.json
 
 
 # Folders
@@ -31,6 +32,7 @@ test_data/
 out/
 temp/
 runs/
+backups/
 runs_old/
 runs_full_run/
 object_seeking_test/

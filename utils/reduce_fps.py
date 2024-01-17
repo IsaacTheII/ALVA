@@ -40,10 +40,15 @@ def reduce_fps(input_video, new_fps, callback=False):
     # setup progress bar
     pbar = tqdm.tqdm(total=len(frames_to_save), desc="Reducing FPS", unit="frames")
 
-    count = 0
-    new_frames = []
+    # new file name
+    filename, _ = os.path.splitext(input_video)
+    filename += "_%d_fps.mp4"%(new_fps)
+
+    # save the new_frames into a new video
+    out = cv2.VideoWriter(filename, cv2.VideoWriter_fourcc(*'mp4v'), new_fps, (int(cap.get(3)), int(cap.get(4))))
 
     # read frames of source video and save the needed frames to a new array
+    count = 0
     while True:
         count += 1
         is_read, frame = cap.read()
@@ -53,16 +58,7 @@ def reduce_fps(input_video, new_fps, callback=False):
         if count in frames_to_save:
             pbar.update(1)
             # save the frames with the correct indices 
-            new_frames.append(frame)
-    
-    # new file name
-    filename, _ = os.path.splitext(input_video)
-    filename += "_%d_fps.mp4"%(new_fps)
-
-    # save the new_frames into a new video
-    out = cv2.VideoWriter(filename, cv2.VideoWriter_fourcc(*'mp4v'), new_fps, (new_frames[0].shape[1], new_frames[0].shape[0]))
-    for frame in new_frames:
-        out.write(frame)
+            out.write(frame) 
 
     # release input and output video objects
     cap.release()

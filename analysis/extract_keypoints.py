@@ -20,10 +20,10 @@ def calculate_iou(bbox1, bbox2):
     x_right = min(x_max_1, x_max_2)
     y_bottom = min(y_max_1, y_max_2)
 
-    # Intersection area
+    # Intersection area ( + 1 to account for touching edges)
     intersection_area = max(0, x_right - x_left + 1) * max(0, y_bottom - y_top + 1)
 
-    # Union Area
+    # Union Area ( + 1 to account for touching edges)
     bb1_area = (x_max_1 - x_min_1 + 1) * (y_max_1 - y_min_1 + 1)
     bb2_area = (x_max_2 - x_min_2 + 1) * (y_max_2 - y_min_2 + 1)
     union_area = (bb1_area + bb2_area) - intersection_area

@@ -41,8 +41,10 @@ def extract_pose_openpose(src):
                         "--write_video", os.path.splitext(src)[0] + "_openpose.avi",
                         "--display", "0", ])
         #subprocess.run(["./openpose/build/examples/openpose/openpose.bin", "--video", src, "--write_json", "./runs/openpose/", "--display", "0", "--render_pose", "0", "--number_people_max", "1"])
-    except:
-        print("OpenPose is not properly installed or not in the correct directory. Please follow the instructions in the README.md to install OpenPose.")    
+    except Exception as e:
+        print(e)
+        print("OpenPose is not properly installed or not in the correct directory.\
+               Please follow the instructions in the README.md to install OpenPose.")    
 
     
 
