@@ -22,8 +22,7 @@ def main(src):
         subprocess.run([env["PATH_TO_OPENPOSE"] + "bin\OpenPoseDemo.exe", 
                         "--video", src, 
                         "--write_json", output_dir, 
-                        "--write_video", os.path.join(os.path.dirname(src), os.path.basename(src), "openpose.avi"),
-                        "--render_pose", "0",
+                        "--write_video", os.path.join(os.path.splitext(src)[0] + "_openpose.avi"),
                         "--display", "0"])
     except Exception as e:
         print(e)

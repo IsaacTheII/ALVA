@@ -10,11 +10,10 @@ def video_player(**kwargs):
             player.DashPlayer(
                 **
                 {
-                    "controls": True,
                     "playing": False,
                     "volume": 1,
                     "controls": False,
-                    "intervalCurrentTime": 500,
+                    "intervalCurrentTime": 400,
                     "width": "100%",
                     "height": "100%",
                     "style": {"background": "#000000"},

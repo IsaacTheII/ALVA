@@ -4,6 +4,8 @@ import numpy as numpy
 import pandas as pd
 from vis_tool.config.settings import abcs_code_colors as abcs_color_codes
 
+DURATION_IN_SECONDS = 60        # timespan of the timeline view in seconds
+NUM_TRACKS = 7                  # number of tracks on the timeline
 
 
 def render_timeline(object, interactions, abcs, duration, fps, frame_num):
@@ -21,24 +23,7 @@ def render_timeline(object, interactions, abcs, duration, fps, frame_num):
                                  ticktext=tick_text
                       )
                       )
-
-    DURATION_IN_SECONDS = 60        # timespan of the timeline view in seconds
-    NUM_TRACKS = 7     # number of tracks on the timeline
-    """ 
-    lower_bound = frame_num - DURATION_IN_SECONDS * .5 * fps
-    upper_bound = frame_num + DURATION_IN_SECONDS * .5 * fps
-    if lower_bound < 0:
-        lower_bound = 0
-        upper_bound = DURATION_IN_SECONDS * fps
-    if upper_bound > total_frames:
-        upper_bound = total_frames
-        lower_bound = total_frames - DURATION_IN_SECONDS * fps
-    if lower_bound < 0:
-        lower_bound = 0
-        upper_bound = total_frames
-
-    fig.update_xaxes(range=[lower_bound - 10, upper_bound + 10]) 
-    """
+    
     fig.update_yaxes(range=[-0.1, NUM_TRACKS + .1])
     fig.update_xaxes(range=[frame_num - DURATION_IN_SECONDS * fps * .5, frame_num + DURATION_IN_SECONDS * fps * .5], tickformat="%H:%M:%S s")
 
@@ -49,8 +34,8 @@ def render_timeline(object, interactions, abcs, duration, fps, frame_num):
 
     # draw objects
     for index, row in object.iterrows():
-        if row["End_Time"] < frame_num - DURATION_IN_SECONDS * fps * .5 or row["Start_Time"] > frame_num + DURATION_IN_SECONDS * fps * .5:
-            continue
+        #if row["End_Time"] < frame_num - DURATION_IN_SECONDS * fps * .5 or row["Start_Time"] > frame_num + DURATION_IN_SECONDS * fps * .5:
+        #    continue
         y_off = (index) % (NUM_TRACKS - 2)
         fig.add_shape(type="rect", x0=row["Start_Time"], y0=NUM_TRACKS - y_off - 1, x1=row["End_Time"], y1=NUM_TRACKS - y_off,
                       fillcolor="cornflowerblue")
@@ -59,8 +44,8 @@ def render_timeline(object, interactions, abcs, duration, fps, frame_num):
         
     # draw interactions
     for index, row in interactions.iterrows():
-        if row["Event_Time"] < frame_num - DURATION_IN_SECONDS * fps * .5 or row["Event_Time"] > frame_num + DURATION_IN_SECONDS * fps * .5:
-            continue
+        #if row["Event_Time"] < frame_num - DURATION_IN_SECONDS * fps * .5 or row["Event_Time"] > frame_num + DURATION_IN_SECONDS * fps * .5:
+        #    continue
         fig.add_shape(type="rect", x0=row["Event_Time"], y0=1, x1=row["Event_Time"] + 0.5 * fps, y1=2,
                       fillcolor="plum", line_color="plum")
         fig.add_annotation(x=row["Event_Time"], xanchor="left", y=2 - index % 4*0.251,
@@ -68,16 +53,16 @@ def render_timeline(object, interactions, abcs, duration, fps, frame_num):
         
     # draw abcs
     for index, row in abcs.iterrows():
-        if row["End_Time"] < frame_num - DURATION_IN_SECONDS * fps * .5 or row["Start_Time"] > frame_num + DURATION_IN_SECONDS * fps * .5:
-            continue
+        #if row["End_Time"] < frame_num - DURATION_IN_SECONDS * fps * .5 or row["Start_Time"] > frame_num + DURATION_IN_SECONDS * fps * .5:
+        #    continue
         fig.add_shape(type="rect", x0=row["Start_Time"], y0=0, x1=row["End_Time"], y1=1,
                       line=dict(color="green", width=2), fillcolor=abcs_color_codes[row["ABCS_Variable"]], opacity=0.5,)
         fig.add_annotation(x=row["Start_Time"], xanchor="left", y=0.5,
                            text=row["ABCS_Variable"], showarrow=False, font=dict(size=15))
 
-    # draw current time
+    """ # draw current time
     fig.add_shape(type="line", x0=frame_num, y0=0, x1=frame_num,
-                  y1=NUM_TRACKS+1, line=dict(color="red", width=2))
+                  y1=NUM_TRACKS+1, line=dict(color="red", width=2)) """
     
     return fig
 """ 

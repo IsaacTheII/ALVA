@@ -10,13 +10,13 @@ import datetime
 
 from vis_tool.vis_app import app
 from vis_tool.components.video_player import video_player
-from vis_tool.components.juxtaposition_components import render_keypoints
+from vis_tool.components.juxtaposition_components import render_keypoints, convert_keypoints_to_skeleton
 from vis_tool.components.explicit_representation_components import render_tracked_keypoints
-from vis_tool.components.timeline_components import render_timeline, update_abcs_coding
+from vis_tool.components.timeline_components import render_timeline, update_abcs_coding, DURATION_IN_SECONDS
 from structures.timeline_structure import Timeline
 from structures.keypoints_structure import load_numpy_keypoints_bbox
 
-from vis_tool.config.settings import VIS_TOOL_ASSETS_PATH, SCREEN_HEIGHT, abcs_code_colors
+from vis_tool.config.settings import VIS_TOOL_ASSETS_PATH, SCREEN_HEIGHT, abcs_code_colors, hf_color
 
 # Get the list of video files in the assets directory
 
@@ -30,15 +30,21 @@ objects = {}
 interactions = {}
 abcs = {}
 fps = {}
+dur = {}
+width = {}
+height = {}
 dur_sec = {}
 for folder in assets_folders:
     timeline = Timeline()
     timeline.import_from_file(os.path.join(
-        "vis_tool/assets", folder, "timeline", folder + "_timeline.txt"))
+        VIS_TOOL_ASSETS_PATH, folder, "timeline", folder + "_timeline.txt"))
     objects[folder] = timeline.get_objects()
     interactions[folder] = timeline.get_object_interactions()
     abcs[folder] = timeline.get_abcs_coding()
     fps[folder] = float(timeline.get_frame_rate())
+    dur[folder] = float(timeline.get_duration())
+    width[folder] = float(timeline.get_frame_width())
+    height[folder] = float(timeline.get_frame_height())
     dur_sec[folder] = float(timeline.get_duration())
 
 
@@ -61,18 +67,24 @@ for folder in assets_folders:
 # load all the keypoints and bounding boxes from all assets
 child = {}
 therapist = {}
+skeletal_child = {}
+skeletal_therapist = {}
 for folder in assets_folders:
     child_tmp, _ = load_numpy_keypoints_bbox(os.path.join(
-        "vis_tool/assets", folder, "juxtaposition"), "child")
+        VIS_TOOL_ASSETS_PATH, folder, "juxtaposition"), "child")
     child_tmp[child_tmp == 0] = np.nan
     child_tmp[:, 1, :] = -child_tmp[:, 1, :]
     child[folder] = child_tmp
 
     therapist_tmp, _ = load_numpy_keypoints_bbox(os.path.join(
-        "vis_tool/assets", folder, "juxtaposition"), "therapist")
+        VIS_TOOL_ASSETS_PATH, folder, "juxtaposition"), "therapist")
     therapist_tmp[therapist_tmp == 0] = np.nan
     therapist_tmp[:, 1, :] = -therapist_tmp[:, 1, :]
     therapist[folder] = therapist_tmp
+
+for child_key, therapist_key in zip(child.keys(), therapist.keys()):
+    skeletal_child[child_key] = convert_keypoints_to_skeleton(child[child_key])
+    skeletal_therapist[therapist_key] = convert_keypoints_to_skeleton(therapist[therapist_key])
 
 # because dash is a stateless framework, we need to account for all possible states of the app
 # it is possible that the video-dorpdown value prop is None, dealing with this in the callbacks is costly.
@@ -81,6 +93,9 @@ for folder in assets_folders:
 child[None] = child[assets_folders[0]]
 therapist[None] = therapist[assets_folders[0]]
 fps[None] = fps[assets_folders[0]]
+dur[None] = dur[assets_folders[0]]
+width[None] = width[assets_folders[0]]
+height[None] = height[assets_folders[0]]
 
 
 # Create a Dash app layout
@@ -106,7 +121,7 @@ app.layout = html.Div(
         html.Div(
             [
                 html.H1("Observational Coding Tool", style={
-                        "text-align": "center", "margin": "0px", "padding": "0px"}),
+                        "textAlign": "center", "margin": "0px", "padding": "0px"}),
                 # select video, Select visual comparison
                 html.Div(children=[
                     html.Div(
@@ -124,10 +139,10 @@ app.layout = html.Div(
                             ),
                         ],
                             style={"width": "70%", "padding": "8px",
-                                   "margin": "8px", "align-self": "center"},
+                                   "margin": "8px", "alignSelf": "center"},
                         ),
                         style={"width": "50%",
-                               "display": "flex", "flex-direction": "column", "justify-content": "center", "align-items": "center"},
+                               "display": "flex", "flexDirection": "column", "justifyContent": "center", "alignItems": "center"},
                     ),
                     html.Div(
                         style={"width": "50%",
@@ -136,46 +151,60 @@ app.layout = html.Div(
                             html.Div(
                                 children=[
                                     html.Button("Skeletal Overlay",
-                                                id="skeletal-overlay-button", style={"border-radius": "30px", "font-size": "25px", "padding": "5px", "margin": "5px"}),
+                                                id="skeletal-overlay-button", style={"borderRadius": "30px", "fontSize": "25px", "padding": "5px", "margin": "5px"}),
                                     html.Button("Isolate Child",
-                                                id="isolated-child-button", style={"border-radius": "30px", "font-size": "25px", "padding": "5px", "margin": "5px"}),
+                                                id="isolated-child-button", style={"borderRadius": "30px", "fontSize": "25px", "padding": "5px", "margin": "5px"}),
                                     html.Button("Isolate Therapist",
-                                                id="isolated-therapist-button", style={"border-radius": "30px", "font-size": "25px", "padding": "5px", "margin": "5px"}),
+                                                id="isolated-therapist-button", style={"borderRadius": "30px", "fontSize": "25px", "padding": "5px", "margin": "5px"}),
                                     html.Button("Track Keypoints",
-                                                id="track-keypoints-button", style={"border-radius": "30px", "font-size": "25px", "padding": "5px", "margin": "5px"}),
+                                                id="track-keypoints-button", style={"borderRadius": "30px", "fontSize": "25px", "padding": "5px", "margin": "5px"}),
                                 ],
                                 style={
                                     "display": "flex",
-                                    "flex-direction": "row",
-                                    "justify-content": "center",
-                                    "align-items": "center",
+                                    "flexDirection": "row",
+                                    "justifyContent": "center",
+                                    "alignItems": "center",
                                     "spacing": "10px",
                                 },
                             ),
                         ]
                     ),
                 ],
-                    style={"display": "flex", "flex-direction": "row",
-                           "align-items": "center", "justify_content": "center"},
+                    style={"display": "flex", "flexDirection": "row",
+                           "alignItems": "center", "justify_content": "center"},
                 ),
                 # Two main views, left is the original video, right is the comparison visualizations
                 html.Div(children=[
                     dbc.Card(children=[
                         html.H1("Please select a video", id="video-placeholder", hidden=False,
-                                style={"text-align": "center", "margin": "0px", "padding": "%dpx 0px"%(int(SCREEN_HEIGHT/4) - 24)}),
+                                style={"textAlign": "center", "margin": "0px", "padding": "%dpx 0px"%(int(SCREEN_HEIGHT/4) - 24)}),
                         html.Div(id="video-player-visability", hidden=True, children=[
-                            video_player(id="player_original", height="%dpx"%(int(SCREEN_HEIGHT/2)), style={
-                                "padding": "10px"}),
+                            player.DashPlayer(id="player_original",
+                                            playing=False,
+                                            controls=False,
+                                            intervalCurrentTime=400,
+                                            width="100%",
+                                            height="%dpx"%(int(SCREEN_HEIGHT/2)), 
+                                            style={"padding": "10px"})
+                            #video_player(id="player_original", height="%dpx"%(int(SCREEN_HEIGHT/2)), style={"padding": "10px"}), 
                         ]),
                     ],
-                        style={"width": "50%"},
+                        style={"width": "50%", 'padding': '10px', 'margin': '5px'},
                     ),
                     dbc.Card(children=[
                         html.H1("Pleace select a visualization mode", id="vis-view-placeholder", hidden=False,
-                               style={"text-align": "center", "margin": "0px", "padding": "%dpx 0px"%(int(SCREEN_HEIGHT/4) - 24)}),
+                               style={"textAlign": "center", "margin": "0px", "padding": "%dpx 0px"%(int(SCREEN_HEIGHT/4) - 24)}),
                         html.Div(id="vis-view-overlay", hidden=True, children=[
-                            video_player(id="player_vis_overlay", height="%dpx"%(int(SCREEN_HEIGHT/2)), muted=True, style={
-                                         "padding": "10px"})
+                            player.DashPlayer(id="player_vis_overlay",
+                                              playing=False,
+                                              controls=False,
+                                              muted=True,
+                                                intervalCurrentTime=1000,
+                                                width="100%",
+                                              height="%dpx"%(int(SCREEN_HEIGHT/2)), 
+                                              style={"padding": "10px"})
+                            #video_player(id="player_vis_overlay", height="%dpx"%(int(SCREEN_HEIGHT/2)), muted=True, style={
+                            #             "padding": "10px"})
                         ]),
                         html.Div(id="vis-view-isolated-child", hidden=True, children=[
                             dcc.Graph(id="graph-isolated-child",
@@ -189,10 +218,10 @@ app.layout = html.Div(
                             dcc.Graph(id="graph-track", figure=go.Figure()),
                         ]),
                     ],
-                        style={"width": "50%"},
+                        style={"width": "50%", 'padding': '10px', 'margin': '5px'},
                     ),
                 ],
-                    style={"display": "flex", "flex-direction": "row"}
+                    style={"display": "flex", "flexDirection": "row"}
                 ),
 
                 # Video Controls, Timeline, Visualization Controls
@@ -202,9 +231,9 @@ app.layout = html.Div(
                         children=[
                             dbc.Card([
                                 html.P("Main Video Controls:", style={
-                                       "text-align": "center"}),
+                                       "textAlign": "center"}),
                                 html.P("Volume:", style={
-                                       "text-align": "center", "margin-bottom": "0px", "padding-bottom": "0px"}),
+                                       "textAlign": "center", "marginBottom": "0px", "paddingBottom": "0px"}),
                                 dcc.Slider(
                                     id="volume-slider",
                                     min=0,
@@ -215,30 +244,30 @@ app.layout = html.Div(
                                     marks={0: "0%", 0.5: "50%", 1: "100%"},
                                 ),
                                 html.P("Playback Speed:", style={
-                                    "text-align": "center", "margin-bottom": "0px", "padding-bottom": "0px"}),
+                                    "textAlign": "center", "marginBottom": "0px", "paddingBottom": "0px"}),
                                 dcc.Slider(
                                     id="speed-slider",
-                                    min=0.1,
-                                    max=2,
-                                    value=1,
+                                    min=-3,
+                                    max=3,
+                                    value=0,
                                     step=None,
                                     updatemode="drag",
                                     marks={
-                                        i: str(i) + "x" for i in [0.1, 0.5, 1, 1.5, 2]},
+                                        i: str(2**i) + "x" for i in range(-3, 4)},
                                 ),
                                 html.Div(
                                     children=[
                                         html.Button(
-                                            "Play", id="play-button", style={"margin": "8px", "margin-bottom": "2px", "padding-left": "5px", "padding-right": "5px", "font-weight": "bold"}),
+                                            "Play", id="play-button", style={"margin": "8px", "marginBottom": "2px", "paddingLeft": "5px", "paddingRight": "5px", "fontWeight": "bold"}),
                                         html.Button(
-                                            "Pause", id="pause-button", style={"margin": "8px", "margin-bottom": "2px", "font-weight": "bold"}),
+                                            "Pause", id="pause-button", style={"margin": "8px", "marginBottom": "2px", "fontWeight": "bold"}),
                                     ],
                                     style={
                                         "width": "100%",
                                         "display": "flex",
-                                        "flex-direction": "row",
-                                        "justify-content": "center",
-                                        "align-items": "center",
+                                        "flexDirection": "row",
+                                        "justifyContent": "center",
+                                        "alignItems": "center",
                                     },
                                 ),
                                 dcc.Slider(
@@ -270,26 +299,26 @@ app.layout = html.Div(
                                                      html.Div([
                                                          html.Button(
                                                              "Expression of Wishes", id="ew-button", 
-                                                             style={"border-radius": "30px", "font-size": "25px", "padding": "5px", "background": abcs_code_colors["EW"]}),
+                                                             style={"borderRadius": "30px", "fontSize": "25px", "padding": "5px", "background": abcs_code_colors["EW"]}),
                                                          html.Button(
                                                              "Unscorable", id="un-button", 
-                                                             style={"border-radius": "30px", "font-size": "25px", "padding": "5px 20px 5px 20px", "background": abcs_code_colors["UN"]}),
-                                                     ], style={"display": "flex", "flex-direction": "column", "justify-content": "center", "align-items": "flex-end"}),
+                                                             style={"borderRadius": "30px", "fontSize": "25px", "padding": "5px 20px 5px 20px", "background": abcs_code_colors["UN"]}),
+                                                     ], style={"display": "flex", "flexDirection": "column", "justifyContent": "center", "alignItems": "flex-end"}),
                                                      html.Button(
                                                          "Other", id="ot-button", 
-                                                         style={"border-radius": "30px", "font-size": "25px", "padding": "30px 5px 30px 5px", "background": abcs_code_colors["OT"]}),
+                                                         style={"borderRadius": "30px", "fontSize": "25px", "padding": "30px 5px 30px 5px", "background": abcs_code_colors["OT"]}),
                                                      html.Div([
                                                          html.Button(
                                                              "Repetitive Behaviour", id="rb-button", 
-                                                             style={"border-radius": "30px", "font-size": "25px", "padding": "5px", "background": abcs_code_colors["RB"]}),
+                                                             style={"borderRadius": "30px", "fontSize": "25px", "padding": "5px", "background": abcs_code_colors["RB"]}),
                                                          html.Button(
                                                              "Functional Play", id="fp-button", 
-                                                             style={"border-radius": "30px", "font-size": "25px", "padding": "5px", "background": abcs_code_colors["FP"]}),
-                                                     ], style={"display": "flex", "flex-direction": "column", "justify-content": "center", "align-items": "flex-start"}),
+                                                             style={"borderRadius": "30px", "fontSize": "25px", "padding": "5px", "background": abcs_code_colors["FP"]}),
+                                                     ], style={"display": "flex", "flexDirection": "column", "justifyContent": "center", "alignItems": "flex-start"}),
                                                  ],
-                                              style={"text-align": "center", "display": "flex", "flex-direction": "row", "justify-content": "center", "align-items": "center", "padding-top": "-5px"}),
+                                              style={"textAlign": "center", "display": "flex", "flexDirection": "row", "justifyContent": "center", "alignItems": "center", "paddingTop": "-5px"}),
                                  ],
-                                     style={"margin": "8px","margin-top": "-5px", "padding": "5px"},
+                                     style={"margin": "8px","marginTop": "-5px", "padding": "5px"},
                                  ),
                     ],
                     ),
@@ -297,81 +326,97 @@ app.layout = html.Div(
                              children=[
                                  dbc.Card([
                                      html.P("Visualization Controls:",
-                                            style={"text-align": "center"}),
+                                            style={"textAlign": "center"}),
                                      html.Div("Please select a visualization mode", id="control-placeholder", hidden=False,
-                                              style={"text-align": "center", "padding-bottom": "100px"}),
+                                              style={"textAlign": "center", "paddingBottom": "100px"}),
                                      html.Div(id="Overlay-Controls", hidden=True, children=[
                                          html.Div("Rendering skeleton on video.", style={
-                                                  "text-align": "center"}),
+                                                  "textAlign": "center"}),
                                          html.Div("Synching overlay with main video.", style={
-                                                  "text-align": "center"})
+                                                  "textAlign": "center"})
                                      ],
                                          style={"width": "100%", "padding": "0px", "margin": "0px",
-                                                "align-items": "center", "padding-bottom": "100px"},
+                                                "alignItems": "center", "paddingBottom": "100px"},
                                      ),
                                      html.Div(id="Isolate-Controls", hidden=True,
                                               children=[
                                                   html.P("Isolate Controls", style={
-                                                      "text-align": "center"}),
+                                                      "textAlign": "center"}),
                                                   dcc.Checklist(
                                                       id="bool-props-isolate",
                                                       options=[
-                                                          {"label": val.capitalize(),
-                                                           "value": val}
-                                                          for val in [
-                                                              "right hand",
-                                                              "left hand",
-                                                              "right foot",
-                                                              "left foot",
-                                                          ]
+                                                          { "label": html.Div(['Right Hand'], 
+                                                          style={'background': hf_color["RH"], 'fontSize': 18, 'fontWeight': 'bold', 'color': 'black', 'padding':'8px', 'borderRadius': '20px'}),
+                                                            "value": "right hand",
+                                                            },
+                                                            { "label": html.Div(['Left Hand'], 
+                                                            style={'background': hf_color["LH"], 'fontSize': 18, 'fontWeight': 'bold', 'color': 'black', 'padding':'8px', 'borderRadius': '20px'}),
+                                                            "value": "left hand",
+                                                            },
+                                                            { "label": html.Div(['Right Foot'], 
+                                                            style={'background': hf_color["RF"], 'fontSize': 18, 'fontWeight': 'bold', 'color': 'black', 'padding':'8px', 'borderRadius': '20px'}),
+                                                            "value": "right foot",
+                                                            },
+                                                            { "label": html.Div(['Left Foot'], 
+                                                            style={'background': hf_color["LF"], 'fontSize': 18, 'fontWeight': 'bold', 'color': 'black', 'padding':'8px', 'borderRadius': '20px'}),
+                                                            "value": "left foot",
+                                                            },
                                                       ],
                                                       value=[],
                                                       inline=True,
-                                                      style={"width": "100%", "display": "flex", "flex-direction": "row",
-                                                             "justify-content": "space-evenly", "align-items": "center", "padding-bottom": "20px"},
+                                                      style={"width": "100%", "display": "flex", "flexDirection": "row",
+                                                             "justifyContent": "space-evenly", "alignItems": "center", "paddingBottom": "20px",},
                                                   ),
                                               ]
                                               ),
                                      html.Div(id="Track-Controls", hidden=True,
                                               children=[
                                                   html.P("Track Controls", style={
-                                                      "text-align": "center"}),
+                                                      "textAlign": "center"}),
                                                   dcc.Checklist(
                                                       id="bool-props-track",
                                                       options=[
-                                                          {"label": val.capitalize(),
-                                                           "value": val}
-                                                          for val in [
-                                                              "right hand",
-                                                              "left hand",
-                                                              "right foot",
-                                                              "left foot",
-                                                          ]
+                                                          { "label": html.Div(['Right Hand'], 
+                                                          style={'background': hf_color["RH"], 'fontSize': 18, 'fontWeight': 'bold', 'color': 'black', 'padding':'8px', 'borderRadius': '20px'}),
+                                                            "value": "right hand",
+                                                            },
+                                                            { "label": html.Div(['Left Hand'], 
+                                                            style={'background': hf_color["LH"], 'fontSize': 18, 'fontWeight': 'bold', 'color': 'black', 'padding':'8px', 'borderRadius': '20px'}),
+                                                            "value": "left hand",
+                                                            },
+                                                            { "label": html.Div(['Right Foot'], 
+                                                            style={'background': hf_color["RF"], 'fontSize': 18, 'fontWeight': 'bold', 'color': 'black', 'padding':'8px', 'borderRadius': '20px'}),
+                                                            "value": "right foot",
+                                                            },
+                                                            { "label": html.Div(['Left Foot'], 
+                                                            style={'background': hf_color["LF"], 'fontSize': 18, 'fontWeight': 'bold', 'color': 'black', 'padding':'8px', 'borderRadius': '20px'}),
+                                                            "value": "left foot",
+                                                            },
                                                       ],
                                                       value=[],
                                                       inline=True,
-                                                      style={"width": "100%", "display": "flex", "flex-direction": "row",
-                                                             "justify-content": "space-evenly", "align-items": "center", "padding-bottom": "20px"},
+                                                      style={"width": "100%", "display": "flex", "flexDirection": "row",
+                                                             "justifyContent": "space-evenly", "alignItems": "center", "paddingBottom": "20px"},
                                                   ),
                                               ],
-                                              style={"width": "100%", "display": "flex", "flex-direction": "column",
-                                                     "justify-content": "flex-start", "align-items": "center"},
+                                              style={"width": "100%", "display": "flex", "flexDirection": "column",
+                                                     "justifyContent": "flex-start", "alignItems": "center",},
                                               ),
                                  ],
-                                     style={"width": "100%", "display": "flex",
-                                            "flex-direction": "column", "margin": "8px", "padding": "5px"},
+                                     style={ "display": "flex",
+                                            "flexDirection": "column", "margin": "8px", "padding": "5px"},
                                  ),
                     ]
                     )
                 ],
-                    style={"display": "flex", "flex-direction": "row",
-                           "align-items": "flex-start"},
+                    style={"display": "flex", "flexDirection": "row",
+                           "alignItems": "flex-start"},
                 ),
 
             ],
             style={
                 "display": "flex",
-                "flex-direction": "column",
+                "flexDirection": "column",
             },
         ),
     ]
@@ -409,14 +454,6 @@ def update_vis_view(_so, _ic, _it, _tk):
 
 
 @app.callback(
-    Output("current-time", "children"),
-    Input("player_original", "currentTime"),
-)
-def update_current_time(current_time):
-    return current_time
-
-
-@app.callback(
     Output("player_original", "url"),
     Output("player_vis_overlay", "url"),
     Output("video-placeholder", "hidden"),
@@ -426,8 +463,8 @@ def update_current_time(current_time):
 def update_video(value):
     if value is None:
         return no_update, no_update, False, True
-    ori_vid = f"assets/{value}/{value}_original.mp4"
-    vis_vid = f"assets/{value}/superposition/{value}_openpose.mp4"
+    ori_vid = f"assets/video_assets/{value}/{value}_original.mp4"
+    vis_vid = f"assets/video_assets/{value}/superposition/{value}_openpose.mp4"
     return ori_vid, vis_vid, True, False
 
 
@@ -436,11 +473,22 @@ def update_video(value):
     Input("player_original", "currentTime"),
     Input("bool-props-isolate", "value"),
     State("video-dropdown", "value"),
+    State("graph-isolated-child", "figure"),
+    State("vis-view-isolated-child", "hidden"),
 )
-def update_vis_view_isolated(current_time, val_list, value_folder):
+def update_vis_view_isolated(current_time, val_list, value_folder, fig, hidden):
+    if hidden:
+        return no_update
+    #print(fig['data'])
     current_time = 0 if current_time is None else current_time
-    return render_keypoints(child[value_folder], "right hand" in val_list, "left hand" in val_list, "right foot" in val_list, "left foot" in val_list,
-                            int(current_time * fps[value_folder]) - 1, int(SCREEN_HEIGHT/2))
+    return render_keypoints(skeletal_child[value_folder], 
+                            "right hand" in val_list, 
+                            "left hand" in val_list, 
+                            "right foot" in val_list, 
+                            "left foot" in val_list,
+                            int(current_time * fps[value_folder]) - 1, 
+                            width[value_folder], height[value_folder], 
+                            int(SCREEN_HEIGHT/2))
 
 
 @app.callback(
@@ -448,11 +496,20 @@ def update_vis_view_isolated(current_time, val_list, value_folder):
     Input("player_original", "currentTime"),
     Input("bool-props-isolate", "value"),
     State("video-dropdown", "value"),
+    State("vis-view-isolated-therapist", "hidden"),
 )
-def update_vis_view_isolated(current_time, val_list, value_folder):
+def update_vis_view_isolated(current_time, val_list, value_folder, hidden):
+    if hidden:
+        return no_update
     current_time = 0 if current_time is None else current_time
-    return render_keypoints(therapist[value_folder], "right hand" in val_list, "left hand" in val_list, "right foot" in val_list, "left foot" in val_list,
-                            int(current_time * fps[value_folder]) - 1, int(SCREEN_HEIGHT/2))
+    return render_keypoints(skeletal_therapist[value_folder], 
+                            "right hand" in val_list, 
+                            "left hand" in val_list, 
+                            "right foot" in val_list, 
+                            "left foot" in val_list,
+                            int(current_time * fps[value_folder]) - 1, 
+                            width[value_folder], height[value_folder], 
+                            int(SCREEN_HEIGHT/2))
 
 
 @app.callback(
@@ -460,15 +517,24 @@ def update_vis_view_isolated(current_time, val_list, value_folder):
     Input("player_original", "currentTime"),
     Input("bool-props-track", "value"),
     State("video-dropdown", "value"),
+    State("vis-view-track", "hidden"),
 )
-def update_vis_view_isolated(current_time, val_list, value_folder):
+def update_vis_view_isolated(current_time, val_list, value_folder, hidden):
+    if hidden:
+        return no_update
     track_dict = {"RH": "right hand" in val_list, "LH": "left hand" in val_list,
                   "RF": "right foot" in val_list, "LF": "left foot" in val_list}
     duration = int(10 * fps[value_folder])
     current_time = 0 if current_time is None else current_time
-    return render_tracked_keypoints(child[value_folder], track_dict, duration, int(current_time * fps[value_folder]) - 1, int(SCREEN_HEIGHT/2))
+    return render_tracked_keypoints(
+        child[value_folder], 
+        track_dict, 
+        duration, int(current_time * fps[value_folder]) - 1, 
+        width[value_folder],
+        height[value_folder],
+        int(SCREEN_HEIGHT/2))
 
-
+"""
 @app.callback(
     Output("timeline-graph", "figure"),
     Input("player_original", "currentTime"),
@@ -478,7 +544,7 @@ def update_timeline(current_time, value_folder):
     if current_time is None or value_folder is None:
         return no_update
     return render_timeline(objects[value_folder], interactions[value_folder], abcs[value_folder], dur_sec[value_folder], fps[value_folder], int(current_time * fps[value_folder]))
-
+"""
 
 @app.callback(
     Output("player_original", "volume"),
@@ -494,6 +560,7 @@ def update_volume(volume):
     Input("speed-slider", "value"),
 )
 def update_speed(speed):
+    speed = 2**speed
     return speed, speed
 
 
@@ -529,19 +596,23 @@ def update_play(play, pause, value):
     Output("seek-bar-slider", "max"),
     Output("seek-bar-slider", "marks"),
     Output("seek-bar-slider", "value"),
-    Input("seek-bar-slider", "value"),
-    Input("player_original", "duration"),
+    Input("seek-bar-slider", "drag_value"),
     Input("player_original", "currentTime"),
+    State("video-dropdown", "value")
 )
-def update_seek_bar(value, duration, current_time):
-    duration = int(duration) if duration is not None else 1
-    value = int(value) if value is not None else 0
+def update_seek_bar(drag_value, current_time, folder_value):
+    duration = int(dur[folder_value]) if dur[folder_value] is not None else 1
+    value = int(drag_value) if drag_value is not None else 0
     ctx = callback_context
     input_trigger = ctx.triggered[0]["prop_id"]
     if input_trigger == "seek-bar-slider.value":
         # marks = {0: str(datetime.timedelta(seconds=0)), value: str(datetime.timedelta(seconds=value)), duration: str(datetime.timedelta(seconds=duration))}
         marks = {value: str(datetime.timedelta(seconds=value))}
         return value, value, duration, marks, no_update
+    elif input_trigger == "seek-bar-slider.drag_value":
+        # marks = {0: str(datetime.timedelta(seconds=0)), drag_value: str(datetime.timedelta(seconds=drag_value)), duration: str(datetime.timedelta(seconds=duration))}
+        marks = {drag_value: str(datetime.timedelta(seconds=drag_value))}
+        return drag_value, drag_value, duration, marks, no_update
     elif input_trigger == "player_original.duration":
         marks = {0: str(datetime.timedelta(seconds=0)), duration: str(
             datetime.timedelta(seconds=duration))}
@@ -557,37 +628,54 @@ def update_seek_bar(value, duration, current_time):
 
 
 @app.callback(
-    Output("ot-button", "n_clicks"),
+    Output("timeline-graph", "figure", allow_duplicate=True),
     Input("ew-button", "n_clicks"),
     Input("un-button", "n_clicks"),
     Input("ot-button", "n_clicks"),
     Input("rb-button", "n_clicks"),
     Input("fp-button", "n_clicks"),
+    Input("video-dropdown", "value"),
     State("player_original", "currentTime"),
-    State("video-dropdown", "value"),
+    State("timeline-graph", "figure"),
+    prevent_initial_call='initial_duplicate'
 )
-def update_coding(ew, un, ot, rb, fp, current_time, value_folder):
-    if current_time is None or value_folder is None:
+def update_coding(_ew, _un, _ot, _rb, _fp, value_folder, current_time, fig):
+    if current_time is None:
+        current_time = 0
+    if value_folder is None:
         return no_update
     ctx = callback_context
     button_id = ctx.triggered[0]["prop_id"].split(".")[0]
     if button_id == "ew-button":
         update_abcs_coding(abcs[value_folder], int(current_time * fps[value_folder]) - 1, "EW")
-        return no_update
     elif button_id == "un-button":
         update_abcs_coding(abcs[value_folder], int(current_time * fps[value_folder]) - 1, "UN")
-        return no_update
     elif button_id == "ot-button":
-        abcs[value_folder] = update_abcs_coding(abcs[value_folder], int(current_time * fps[value_folder]) - 1, "OT")
-        return no_update
+        update_abcs_coding(abcs[value_folder], int(current_time * fps[value_folder]) - 1, "OT")
     elif button_id == "rb-button":
         update_abcs_coding(abcs[value_folder], int(current_time * fps[value_folder]) - 1, "RB")
-        return no_update
     elif button_id == "fp-button":
         update_abcs_coding(abcs[value_folder], int(current_time * fps[value_folder]) - 1, "FP")
-        return no_update
+    elif button_id == "video-dropdown":
+        pass
     else:
         return no_update
+    return render_timeline(objects[value_folder], interactions[value_folder], abcs[value_folder], dur_sec[value_folder], fps[value_folder], (current_time) * fps[value_folder])
+
+
+@app.callback(
+    Output("timeline-graph", "figure", allow_duplicate=True),
+    Input("video-dropdown", "value"),
+    Input("player_original", "currentTime"),
+    State("timeline-graph", "figure"),
+    prevent_initial_call='initial_duplicate'
+)
+def update_timeline(value_folder, current_time, fig):
+    if current_time is None or value_folder is None:
+        return no_update
+    fig['layout']['xaxis']['range'] = [int(current_time * fps[value_folder]) - DURATION_IN_SECONDS * fps[value_folder] * .5,
+                                        int(current_time * fps[value_folder]) + DURATION_IN_SECONDS * fps[value_folder] * .5]
+    return fig
 
 
 if __name__ == "__main__":

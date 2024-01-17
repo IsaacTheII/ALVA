@@ -36,7 +36,7 @@ def calculate_confidenceseries_openpose():
                 pose_keypoints_2d = person['pose_keypoints_2d']
 
                 # Get the confidence score from the keypoints. Formate of body25 output: y1, x1, c1, y2, x2, c2, ... , y25, x25, c25
-                c = pose_keypoints_2d[2::3]
+                c = pose_keypoints_2d[2:44:3]
 
                 # add the confidence scores to the confidence_scores_frame
                 confidence_scores_frame = np.append(confidence_scores_frame, c)
@@ -192,7 +192,7 @@ def calculate_confidenceseries_pifpaf():
     
     return conf_series
 
-def smooth_mov_avg_mask(y, mask_size):
+""" def smooth_mov_avg_mask(y, mask_size):
     # remove the None values from the list
     y_tmp = [i for i in y if i is not None]
 
@@ -202,27 +202,79 @@ def smooth_mov_avg_mask(y, mask_size):
     # add the None values back to the list
     smooth_mov_avg = [None if i is None else smooth_mov_avg.pop(0) for i in y]
 
-    return smooth_mov_avg
+    return smooth_mov_avg """
+
+
+def smooth_mov_avg_mask(y, mask_size):
+    # account for the mask size
+    pad_size = mask_size//2
+    y = np.pad(y, pad_size, mode='wrap')
+
+    # remove the None values from the list
+    y_tmp = [i for i in y if i is not None]
+
+    mask = np.ones(mask_size)/mask_size
+    smooth_mov_avg = np.convolve(y_tmp, mask, mode='same').tolist()
+
+    # add the None values back to the list
+    smooth_mov_avg = [None if i is None else smooth_mov_avg.pop(0) for i in y]
+
+    return smooth_mov_avg[pad_size:-pad_size]
 
 # Main function
 def main():
+    
+
     # Call the utility functions
     s_openpose = calculate_confidenceseries_openpose()
     s_yolo_x = calculate_confidenceseries_yolo_extra_large()
     s_yolo_n = calculate_confidenceseries_yolo_nano()
     s_pifpaf = calculate_confidenceseries_pifpaf()
 
-    # Plot the series using matplotlib
-    plt.plot(smooth_mov_avg_mask(s_openpose, 100), label='Openpose')
-    plt.plot(smooth_mov_avg_mask(s_yolo_x, 100), label='YOLOv8 Pose Extra Large')
-    plt.plot(smooth_mov_avg_mask(s_yolo_n, 100), label='YOLOv8 Pose Nano')
-    plt.plot(smooth_mov_avg_mask(s_pifpaf, 100), label='Pifpaf')
 
+
+    # Replace None values with np.nan
+    r_openpose = [np.nan if i is None else i for i in smooth_mov_avg_mask(s_openpose,80)]
+    r_yolo_x = [np.nan if i is None else i for i in smooth_mov_avg_mask(s_yolo_x,80)]
+    r_yolo_n = [np.nan if i is None else i for i in smooth_mov_avg_mask(s_yolo_n,80)]
+    r_pifpaf = [np.nan if i is None else i for i in smooth_mov_avg_mask(s_pifpaf,80)]
+
+    # Print range
+    print("Openpose range: ", min(r_openpose) - max(r_openpose))
+    print("YOLOv8 Pose Extra Large range: ", min(r_yolo_x) - max(r_yolo_x))
+    print("YOLOv8 Pose Nano range: ", min(r_yolo_n) - max(r_yolo_n))
+    print("Pifpaf range: ", min(r_pifpaf) - max(r_pifpaf))
+    
+
+    # Create a figure and an axis
+    fig, ax = plt.subplots( figsize=(8, 3))
+    # Plot the series using matplotlib
+    ax.plot(smooth_mov_avg_mask(s_openpose, 80), label='Openpose Body25', linewidth=2)
+    ax.plot(smooth_mov_avg_mask(s_yolo_x, 80), label='YOLO yolov8x-pose', linewidth =2)
+    ax.plot(smooth_mov_avg_mask(s_yolo_n, 80), label='YOLO yolov8n-pose', linewidth =2)
+    ax.plot(smooth_mov_avg_mask(s_pifpaf, 80), label='Pifpaf Resnet50', linewidth =2)
+
+    # Set styling
+    font = 20
+    plt.rcParams.update({'font.size': font})
+    
+    # Generate evenly spaced values for the x-axis
+    frames = np.linspace(0, len(s_openpose), num=8)
+
+    # Convert frames to minutes and seconds format
+    ticks = ['{:02d}:{:02d}'.format(int(frame/5) // 60, int(frame/5) % 60) for frame in frames]
+
+    # Set the x-axis tick labels
+    ax.set_xticks(frames)
+    ax.set_xticklabels(ticks, fontsize=font*0.8)
+    ax.set_yticklabels([0, 0.2, 0.4, 0.6, 0.8, 1], fontsize=font*0.8)
     # Add title, axis labels and legend
-    plt.title('Confidence scores for each frame')
-    plt.ylabel('Confidence score')
-    plt.xlabel('Frame number')
-    plt.legend()
+    ax.set_title('Frame Confidence Score for Each Frame',{'size': font})
+    ax.set_ylabel('Frame Confidence Score',{'size': font})
+    ax.set_xlabel('Time (min:sec)',{'size': font})
+    ax.set_ylim([0, 1])
+    ax.legend()
+
 
     # Show the plot
     plt.show()
